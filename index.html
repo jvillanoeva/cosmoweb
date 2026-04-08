@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/header.js" defer></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -21,19 +22,7 @@
       user-select: none;
     }
 
-    #site-title {
-      position: fixed;
-      top: 6vh;
-      left: 6vw;
-      font-family: 'Archivo Black', sans-serif;
-      font-size: clamp(0.85rem, 1.2vw, 1rem);
-      letter-spacing: 0.14em;
-      color: #111111;
-      text-transform: uppercase;
-      z-index: 10;
-    }
-
-    #bouncer {
+#bouncer {
       position: fixed;
       background: #e8e8e4;
       width: calc(100vw / 1.618033988);
@@ -107,16 +96,14 @@
 </head>
 <body>
 
-  <div id="site-title">Cosmo</div>
-
-  <div id="bouncer"></div>
+<div id="bouncer"></div>
 
   <div id="text-layer">
     <div id="quote-block"></div>
     <div id="author-block"></div>
   </div>
 
-  <div id="prompt-block">login (y/n)&nbsp;<span id="cursor">_</span></div>
+  <div id="prompt-block"><span id="typed-text"></span><span id="cursor">_</span></div>
 
   <script>
   // ── Auth init ──────────────────────────────────────────────────────────────
@@ -130,6 +117,11 @@
   // ── State machine ──────────────────────────────────────────────────────────
   const STATE = { SILENCE: 'silence', WORDS: 'words', AUTHOR: 'author', PROMPT: 'prompt', WAITING: 'waiting', EXITING: 'exiting' };
 
+  // ── Project routing ────────────────────────────────────────────────────────
+  const projects = {
+    queretaro: '/queretaro/'
+  };
+
   let state         = STATE.SILENCE;
   let quoteIndex    = 0;
   let stateTimer    = null;
@@ -137,11 +129,13 @@
   let redirecting   = false;
   let cursorInterval = null;
   let touchStartX   = 0;
+  let typedText     = '';
 
   const quoteBlock  = document.getElementById('quote-block');
   const authorBlock = document.getElementById('author-block');
   const promptBlock = document.getElementById('prompt-block');
   const cursorEl    = document.getElementById('cursor');
+  const typedEl     = document.getElementById('typed-text');
   const bouncer     = document.getElementById('bouncer');
 
   // ── DVD bounce ─────────────────────────────────────────────────────────────
@@ -199,6 +193,8 @@
     authorBlock.textContent = '';
     promptBlock.classList.remove('visible');
     cursorEl.classList.remove('hidden');
+    typedText = '';
+    typedEl.textContent = '';
 
     state = STATE.SILENCE;
     stateTimer = setTimeout(buildWords, 400);
@@ -248,16 +244,24 @@
     }, 520);
   }
 
-  // ── Enter ──────────────────────────────────────────────────────────────────
-  async function handleEnter() {
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  function handleSubmit() {
     if (redirecting) return;
-    redirecting = true;
-    clearTimers();
-    try {
-      const session = await Auth.getSession();
-      window.location.href = session ? '/home.html' : '/login.html';
-    } catch (e) {
-      window.location.href = '/login.html';
+    const input = typedText.trim().toLowerCase();
+    const dest = projects[input];
+    if (dest) {
+      redirecting = true;
+      clearTimers();
+      window.location.href = dest;
+    } else {
+      // Unknown project — flash and clear
+      typedEl.style.transition = 'opacity 150ms ease';
+      typedEl.style.opacity = '0.2';
+      setTimeout(() => {
+        typedEl.style.opacity = '';
+        typedText = '';
+        typedEl.textContent = '';
+      }, 400);
     }
   }
 
@@ -265,17 +269,26 @@
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (state !== STATE.WAITING) return;
-    if (e.key === 'y' || e.key === 'Y' || e.key === 'Enter') handleEnter();
-    if (e.key === 'n' || e.key === 'N') nextQuote();
+    if (e.key === 'Enter') {
+      handleSubmit();
+    } else if (e.key === 'Escape') {
+      typedText = '';
+      typedEl.textContent = '';
+    } else if (e.key === 'Backspace') {
+      typedText = typedText.slice(0, -1);
+      typedEl.textContent = typedText;
+    } else if (e.key.length === 1) {
+      typedText += e.key;
+      typedEl.textContent = typedText;
+      clearTimeout(inactiveTimer);
+      inactiveTimer = setTimeout(() => { if (state === STATE.WAITING) nextQuote(); }, 18000);
+    }
   });
-
-  document.addEventListener('click', () => { if (state === STATE.WAITING) handleEnter(); });
 
   document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
   document.addEventListener('touchend', (e) => {
     const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 60) { if (state === STATE.WAITING) nextQuote(); }
-    else                   { if (state === STATE.WAITING) handleEnter(); }
+    if (Math.abs(dx) > 60 && state === STATE.WAITING) nextQuote();
   }, { passive: true });
 
   // ── Boot ───────────────────────────────────────────────────────────────────
