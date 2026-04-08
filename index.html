@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Cosmo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #fafaf8;
+      font-family: 'EB Garamond', Georgia, serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      cursor: default;
+      user-select: none;
+    }
+
+    #site-title {
+      position: fixed;
+      top: 6vh;
+      left: 6vw;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      letter-spacing: 0.14em;
+      color: #111111;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+
+    #bouncer {
+      position: fixed;
+      background: #e8e8e4;
+      width: calc(100vw / 1.618033988);
+      height: calc(100vh / 1.618033988);
+      z-index: 0;
+      /* top/left set by JS */
+    }
+
+    #text-layer {
+      position: fixed;
+      inset: 0;
+      padding-top: 12vh;
+      padding-left: 8vw;
+      padding-right: 8vw;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #quote-block {
+      max-width: 62ch;
+      font-style: italic;
+      font-size: clamp(0.85rem, 1.5vw, 1.4rem);
+      color: #111111;
+      line-height: 1.55;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      transition: opacity 700ms ease;
+    }
+    #quote-block.visible { opacity: 1; }
+
+    #author-block {
+      margin-top: 2.2rem;
+      font-style: normal;
+      font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+      color: #555555;
+      letter-spacing: 0.08em;
+      line-height: 1.4;
+      opacity: 0;
+      transition: opacity 600ms ease;
+    }
+    #author-block.visible { opacity: 1; }
+
+    #prompt-block {
+      position: fixed;
+      bottom: 6vh;
+      left: 6vw;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.75rem;
+      color: #999999;
+      letter-spacing: 0.04em;
+      opacity: 0;
+      transition: opacity 500ms ease;
+      z-index: 10;
+    }
+    #prompt-block.visible { opacity: 1; }
+
+    #cursor {
+      display: inline-block;
+      opacity: 1;
+      transition: opacity 80ms ease;
+    }
+    #cursor.hidden { opacity: 0; }
+
+    @media (max-width: 600px) {
+      /* mobile inherits same rule — no override needed */
+      #text-layer { padding-top: 10vh; padding-left: 6vw; padding-right: 6vw; }
+      #quote-block { font-size: clamp(0.8rem, 2.5vw, 1rem); }
+      #prompt-block { left: 50%; transform: translateX(-50%); white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="site-title">Cosmo</div>
+
+  <div id="bouncer"></div>
+
+  <div id="text-layer">
+    <div id="quote-block"></div>
+    <div id="author-block"></div>
+  </div>
+
+  <div id="prompt-block">login (y/n)&nbsp;<span id="cursor">_</span></div>
+
+  <script>
+  // ── Auth init ──────────────────────────────────────────────────────────────
+  try { Auth.init(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); } catch (e) { console.warn('Auth init:', e); }
+
+  // ── Quote pool ─────────────────────────────────────────────────────────────
+  const quotes = [
+    { text: "Contemporary art deals with the real world of today. It can change the way people see the world and their own lives.", author: "Soichiro Fukutake" }
+  ];
+
+  // ── State machine ──────────────────────────────────────────────────────────
+  const STATE = { SILENCE: 'silence', WORDS: 'words', AUTHOR: 'author', PROMPT: 'prompt', WAITING: 'waiting', EXITING: 'exiting' };
+
+  let state         = STATE.SILENCE;
+  let quoteIndex    = 0;
+  let stateTimer    = null;
+  let inactiveTimer = null;
+  let redirecting   = false;
+  let cursorInterval = null;
+  let touchStartX   = 0;
+
+  const quoteBlock  = document.getElementById('quote-block');
+  const authorBlock = document.getElementById('author-block');
+  const promptBlock = document.getElementById('prompt-block');
+  const cursorEl    = document.getElementById('cursor');
+  const bouncer     = document.getElementById('bouncer');
+
+  // ── DVD bounce ─────────────────────────────────────────────────────────────
+  let bx = 120, by = 80;
+  let vx = 0.12, vy = 0.09;
+  let rafId = null;
+
+  function startBounce() {
+    // Init position after layout
+    const bw = bouncer.offsetWidth;
+    const bh = bouncer.offsetHeight;
+    bx = Math.random() * Math.max(0, window.innerWidth  - bw);
+    by = Math.random() * Math.max(0, window.innerHeight - bh);
+    bouncer.style.left = bx + 'px';
+    bouncer.style.top  = by + 'px';
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function tick() {
+    const bw = bouncer.offsetWidth;
+    const bh = bouncer.offsetHeight;
+    const maxX = window.innerWidth  - bw;
+    const maxY = window.innerHeight - bh;
+
+    bx += vx;
+    by += vy;
+
+    if (bx <= 0)    { bx = 0;    vx =  Math.abs(vx); }
+    if (by <= 0)    { by = 0;    vy =  Math.abs(vy); }
+    if (bx >= maxX) { bx = maxX; vx = -Math.abs(vx); }
+    if (by >= maxY) { by = maxY; vy = -Math.abs(vy); }
+
+    bouncer.style.left = bx + 'px';
+    bouncer.style.top  = by + 'px';
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function clearTimers() {
+    clearTimeout(stateTimer);
+    clearTimeout(inactiveTimer);
+    clearInterval(cursorInterval);
+    stateTimer = inactiveTimer = cursorInterval = null;
+  }
+
+  // ── Quote lifecycle ────────────────────────────────────────────────────────
+  function startQuote(index) {
+    clearTimers();
+    quoteIndex = ((index % quotes.length) + quotes.length) % quotes.length;
+
+    quoteBlock.classList.remove('visible');
+    quoteBlock.textContent = '';
+    authorBlock.classList.remove('visible');
+    authorBlock.textContent = '';
+    promptBlock.classList.remove('visible');
+    cursorEl.classList.remove('hidden');
+
+    state = STATE.SILENCE;
+    stateTimer = setTimeout(buildWords, 400);
+  }
+
+  function buildWords() {
+    state = STATE.WORDS;
+    quoteBlock.textContent = quotes[quoteIndex].text;
+    quoteBlock.getBoundingClientRect(); // force reflow
+    quoteBlock.classList.add('visible');
+    stateTimer = setTimeout(showAuthor, 3500);
+  }
+
+  function showAuthor() {
+    state = STATE.AUTHOR;
+    authorBlock.textContent = '— ' + quotes[quoteIndex].author;
+    authorBlock.classList.add('visible');
+    stateTimer = setTimeout(showPrompt, 600);
+  }
+
+  function showPrompt() {
+    state = STATE.PROMPT;
+    promptBlock.classList.add('visible');
+    stateTimer = setTimeout(() => {
+      state = STATE.WAITING;
+      cursorInterval = setInterval(() => cursorEl.classList.toggle('hidden'), 800);
+      inactiveTimer  = setTimeout(() => { if (state === STATE.WAITING) nextQuote(); }, 18000);
+    }, 1500);
+  }
+
+  function nextQuote() {
+    if (state === STATE.EXITING) return;
+    state = STATE.EXITING;
+    clearTimers();
+
+    quoteBlock.style.transition  = 'opacity 500ms ease';
+    authorBlock.style.transition = 'opacity 500ms ease';
+    promptBlock.style.transition = 'opacity 300ms ease';
+    quoteBlock.style.opacity     = '0';
+    authorBlock.style.opacity    = '0';
+    promptBlock.style.opacity    = '0';
+
+    setTimeout(() => {
+      quoteBlock.style.transition = authorBlock.style.transition = promptBlock.style.transition = '';
+      quoteBlock.style.opacity    = authorBlock.style.opacity    = promptBlock.style.opacity    = '';
+      startQuote(quoteIndex + 1);
+    }, 520);
+  }
+
+  // ── Enter ──────────────────────────────────────────────────────────────────
+  async function handleEnter() {
+    if (redirecting) return;
+    redirecting = true;
+    clearTimers();
+    try {
+      const session = await Auth.getSession();
+      window.location.href = session ? '/home.html' : '/login.html';
+    } catch (e) {
+      window.location.href = '/login.html';
+    }
+  }
+
+  // ── Input ──────────────────────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (state !== STATE.WAITING) return;
+    if (e.key === 'y' || e.key === 'Y' || e.key === 'Enter') handleEnter();
+    if (e.key === 'n' || e.key === 'N') nextQuote();
+  });
+
+  document.addEventListener('click', () => { if (state === STATE.WAITING) handleEnter(); });
+
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 60) { if (state === STATE.WAITING) nextQuote(); }
+    else                   { if (state === STATE.WAITING) handleEnter(); }
+  }, { passive: true });
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  const boot = () => { startBounce(); startQuote(0); };
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(boot);
+  } else {
+    window.addEventListener('load', boot);
+  }
+  </script>
+</body>
+</html>
