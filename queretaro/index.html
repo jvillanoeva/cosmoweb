@@ -98,13 +98,25 @@
       flex-shrink: 0;
     }
 
-    #section-title {
+    #project-title {
       font-family: 'Archivo Black', sans-serif;
-      font-size: clamp(0.85rem, 1.1vw, 1rem);
-      letter-spacing: 0.12em;
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      letter-spacing: 0.04em;
       color: #111111;
       text-transform: uppercase;
+      margin-bottom: 0.6rem;
+      line-height: 1;
+    }
+
+    #section-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+      letter-spacing: 0.14em;
+      color: #555555;
+      text-transform: uppercase;
       margin-bottom: 1.6rem;
+      padding-left: 1.4rem;
+      white-space: nowrap;
     }
 
     #quote-block {
@@ -114,6 +126,7 @@
       line-height: 1.55;
       letter-spacing: 0.01em;
       margin-bottom: 1.4rem;
+      padding-left: 1.4rem;
     }
 
     #author-block {
@@ -121,6 +134,7 @@
       font-size: clamp(0.8rem, 1.1vw, 1rem);
       color: #555555;
       letter-spacing: 0.08em;
+      padding-left: 1.4rem;
     }
 
     /* ── Right column ── */
@@ -175,7 +189,8 @@
 
   <div id="layout">
     <div id="left">
-      <div id="section-title">Cosmogonía</div>
+      <div id="project-title">Querétaro</div>
+      <div id="section-title">Nuestra Cosmogonía</div>
       <div id="quote-block">"Contemporary art deals with the real world of today. It can change the way people see the world and their own lives."</div>
       <div id="author-block">— Soichiro Fukutake</div>
     </div>
