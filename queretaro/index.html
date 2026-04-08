@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Cosmo — Querétaro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -24,6 +24,9 @@
       top: 0; left: 0; right: 0;
       padding: 5vh 6vw 0;
       z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
     }
 
     #site-title {
@@ -32,26 +35,47 @@
       letter-spacing: 0.14em;
       color: #111111;
       text-transform: uppercase;
-      margin-bottom: 1.2vh;
     }
 
-    #nav {
+    /* ── Navegar ── */
+    #nav-container {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      position: relative;
+    }
+
+    #nav-menu {
       display: flex;
-      gap: 0;
-      justify-content: space-between;
-      max-width: 70vw;
+      flex-direction: column;
+      gap: 0.55rem;
+      position: absolute;
+      top: calc(100% + 0.8rem);
+      right: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease;
     }
 
-    #nav a {
-      font-family: 'Archivo Black', sans-serif;
-      font-size: clamp(0.6rem, 0.85vw, 0.8rem);
-      letter-spacing: 0.12em;
-      color: #111111;
-      text-transform: uppercase;
+    #nav-container:hover #nav-menu {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    #nav-menu a {
+      color: #999999;
       text-decoration: none;
+      text-transform: uppercase;
     }
 
-    #nav a:hover { color: #999999; }
+    #nav-menu a:hover { color: #111111; }
+
+    #nav-trigger {
+      color: #999999;
+      cursor: default;
+    }
 
     /* ── Layout ── */
     #layout {
@@ -59,7 +83,7 @@
       inset: 0;
       display: flex;
       align-items: center;
-      padding-top: 14vh;
+      justify-content: center;
     }
 
     /* ── Left column ── */
@@ -98,14 +122,11 @@
     /* ── Right column ── */
     #right {
       flex: 1;
-      height: 100%;
-      padding-top: 14vh;
-      padding-bottom: 6vh;
+      max-height: 72vh;
       padding-right: 6vw;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      justify-content: flex-end;
     }
 
     #image-link {
@@ -123,9 +144,9 @@
     }
 
     #image-caption {
-      margin-top: 0.8rem;
+      margin-top: 0.7rem;
       font-family: 'EB Garamond', Georgia, serif;
-      font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+      font-size: clamp(0.65rem, 0.85vw, 0.8rem);
       color: #999999;
       letter-spacing: 0.04em;
       text-align: right;
@@ -137,12 +158,15 @@
 
   <div id="header">
     <div id="site-title">Cosmo</div>
-    <nav id="nav">
-      <a href="/queretaro/arquitectos/">Arquitectos</a>
-      <a href="/queretaro/artistas/">Artistas</a>
-      <a href="/queretaro/museos/">Museos</a>
-      <a href="/queretaro/mutek/">Mutek</a>
-    </nav>
+    <div id="nav-container">
+      <div id="nav-menu">
+        <a href="/queretaro/arquitectos/">Arquitectos</a>
+        <a href="/queretaro/artistas/">Artistas</a>
+        <a href="/queretaro/museos/">Museos</a>
+        <a href="/queretaro/mutek/">Mutek</a>
+      </div>
+      <div id="nav-trigger">navegar _</div>
+    </div>
   </div>
 
   <div id="layout">
@@ -159,6 +183,7 @@
       <div id="image-caption">Aliya Orr — Whispers</div>
     </div>
   </div>
+
 
 </body>
 </html>
