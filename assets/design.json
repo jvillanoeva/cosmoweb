@@ -11,8 +11,12 @@
   "font": {
     "display": "'Archivo Black', sans-serif",
     "body": "'EB Garamond', Georgia, serif",
-    "mono": "'Courier New', Courier, monospace",
-    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap"
+    "mono": "'IBM Plex Mono', monospace",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono&display=swap"
+  },
+  "layout": {
+    "headerClearance": "20vh",
+    "note": "headerClearance reserves space for the header + fully expanded navegar menu. Never set content top below this value."
   },
   "spacing": {
     "pagePaddingX": "6vw",

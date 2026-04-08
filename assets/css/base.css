@@ -1,0 +1,34 @@
+/* CSS implementation of assets/design.json — link this on every page */
+
+:root {
+  /* Colors */
+  --color-bg:               #fafaf8;
+  --color-surface:          #e8e8e4;
+  --color-text:             #111111;
+  --color-text-secondary:   #555555;
+  --color-text-muted:       #999999;
+
+  /* Fonts */
+  --font-display: 'Archivo Black', sans-serif;
+  --font-body:    'EB Garamond', Georgia, serif;
+  --font-mono:    'IBM Plex Mono', monospace;
+
+  /* Spacing */
+  --page-x:      6vw;
+  --page-y:      5vh;
+
+  /* Layout — headerClearance: space reserved for header + open navegar menu.
+     All page content must start at or below this value. */
+  --header-clearance: 20vh;
+
+  /* Z-index */
+  --z-bg:      0;
+  --z-content: 2;
+  --z-overlay: 10;
+
+  /* Transitions */
+  --t-slow:   700ms ease;
+  --t-medium: 600ms ease;
+  --t-fast:   500ms ease;
+  --t-snap:   300ms ease;
+}
