@@ -355,23 +355,15 @@
     // ── Navegar hover ─────────────────────────────────────────────────────
     const navTrigger = document.getElementById('nav-trigger');
     const filterBar  = document.getElementById('filter-bar');
-    let filterVisible = false;
+    let hideTimer;
 
-    navTrigger.addEventListener('mouseenter', () => {
-      filterBar.classList.add('visible');
-      filterVisible = true;
-    });
-    filterBar.addEventListener('mouseleave', () => {
-      filterBar.classList.remove('visible');
-      filterVisible = false;
-    });
-    navTrigger.addEventListener('mouseleave', (e) => {
-      // keep open if cursor moves into the filter bar
-      if (!filterBar.matches(':hover')) {
-        filterBar.classList.remove('visible');
-        filterVisible = false;
-      }
-    });
+    function showBar()  { clearTimeout(hideTimer); filterBar.classList.add('visible'); }
+    function schedHide(){ hideTimer = setTimeout(() => filterBar.classList.remove('visible'), 120); }
+
+    navTrigger.addEventListener('mouseenter', showBar);
+    navTrigger.addEventListener('mouseleave', schedHide);
+    filterBar.addEventListener('mouseenter',  showBar);
+    filterBar.addEventListener('mouseleave',  schedHide);
 
     // ── Grid ─────────────────────────────────────────────────────────────
     function renderGrid(projects) {
