@@ -255,14 +255,10 @@
       clearTimers();
       window.location.href = dest;
     } else {
-      // Unknown project — flash and clear
-      typedEl.style.transition = 'opacity 150ms ease';
-      typedEl.style.opacity = '0.2';
-      setTimeout(() => {
-        typedEl.style.opacity = '';
-        typedText = '';
-        typedEl.textContent = '';
-      }, 400);
+      // Unknown code → explore
+      redirecting = true;
+      clearTimers();
+      window.location.href = '/explore/';
     }
   }
 

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Cosmo — Explore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--color-bg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      cursor: default;
+    }
+
+    /* ── Header ── */
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: var(--page-y) var(--page-x) 0;
+      z-index: var(--z-overlay);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: var(--color-bg);
+    }
+
+    #site-title {
+      font-family: var(--font-display);
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      letter-spacing: 0.14em;
+      color: var(--color-text);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    /* ── Navegar ── */
+    #nav-container {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      position: relative;
+    }
+    #nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      padding-top: 0.8rem;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    #nav-container:hover #nav-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    #nav-menu a { color: var(--color-text-muted); text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+    #nav-menu a:hover { color: var(--color-text); }
+    #nav-trigger { color: var(--color-text-muted); cursor: default; }
+
+    /* ── Grid view ── */
+    #grid-view {
+      padding-top: var(--header-clearance);
+    }
+
+    /* ── Tag bar ── */
+    #tag-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0 var(--page-x) 2vh;
+    }
+
+    .tag-pill {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-surface);
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      background: transparent;
+      transition: all 150ms ease;
+      user-select: none;
+    }
+    .tag-pill:hover { border-color: var(--color-text); color: var(--color-text); }
+    .tag-pill.active { border-color: var(--color-text); color: var(--color-text); background: var(--color-text); color: var(--color-bg); }
+
+    /* ── Grid ── */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+      padding: 0 2px 2px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--color-surface);
+    }
+
+    /* Collage rhythm: every 5th item full-width */
+    .card:nth-child(5n+1) { grid-column: 1 / -1; aspect-ratio: 16/7; }
+    .card:not(:nth-child(5n+1)) { aspect-ratio: 4/3; }
+
+    .card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 400ms ease;
+    }
+    .card:hover img { transform: scale(1.03); }
+
+    .card-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 1.2rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .card:hover .card-label { opacity: 1; }
+
+    .card-label span {
+      font-family: var(--font-display);
+      font-size: clamp(0.7rem, 1vw, 0.9rem);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    /* ── Project view ── */
+    #project-view {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--color-bg);
+      z-index: 5;
+    }
+
+    #project-left {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 36%;
+      padding: var(--header-clearance) var(--page-x) var(--page-y);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    #back-btn {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      position: absolute;
+      top: var(--header-clearance);
+      left: var(--page-x);
+    }
+    #back-btn:hover { color: var(--color-text); }
+
+    #project-name {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      letter-spacing: 0.04em;
+      color: var(--color-text);
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+    }
+
+    #project-description {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: clamp(0.8rem, 1.1vw, 1rem);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+      padding-left: 1.4rem;
+    }
+
+    #project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      padding-left: 1.4rem;
+    }
+
+    .project-tag {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-surface);
+      padding: 0.2rem 0.6rem;
+    }
+
+    #project-right {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      left: 36%;
+      overflow-y: auto;
+      padding-top: var(--header-clearance);
+      padding-right: var(--page-x);
+      padding-bottom: var(--page-y);
+    }
+
+    #project-images {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+    }
+
+    .project-img-wrap { aspect-ratio: 4/3; overflow: hidden; background: var(--color-surface); }
+    .project-img-wrap:first-child { grid-column: 1 / -1; aspect-ratio: 16/7; }
+    .project-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  </style>
+</head>
+<body>
+
+  <div id="header">
+    <a id="site-title" href="/">Cosmo</a>
+    <div id="nav-container">
+      <div id="nav-menu">
+        <a href="/queretaro/">Querétaro</a>
+      </div>
+      <div id="nav-trigger">navegar _</div>
+    </div>
+  </div>
+
+  <!-- Grid view -->
+  <div id="grid-view">
+    <div id="tag-bar"></div>
+    <div id="grid"></div>
+  </div>
+
+  <!-- Project view -->
+  <div id="project-view">
+    <a id="back-btn" href="/explore/">← explore</a>
+    <div id="project-left">
+      <div id="project-name"></div>
+      <div id="project-description"></div>
+      <div id="project-tags"></div>
+    </div>
+    <div id="project-right">
+      <div id="project-images"></div>
+    </div>
+  </div>
+
+  <script>
+    const API      = 'https://cosmo.ccoossmmoo.com';
+    const IMG      = `${API}/images`;
+    let allProjects = [];
+    let activeTag   = null;
+
+    // ── Boot ──────────────────────────────────────────────────────────────
+    async function init() {
+      try {
+        allProjects = await fetch(`${API}/api/projects`).then(r => r.json());
+      } catch (e) {
+        document.getElementById('grid').innerHTML =
+          '<p style="padding:4vh 6vw;font-family:monospace;color:#999;font-size:0.75rem;">connecting to lola...</p>';
+        return;
+      }
+
+      const params    = new URLSearchParams(location.search);
+      const projectId = params.get('p');
+
+      if (projectId) {
+        const proj = allProjects.find(p => p.project === projectId);
+        if (proj) { showProject(proj); return; }
+      }
+
+      renderTagBar();
+      renderGrid(allProjects);
+    }
+
+    // ── Tag bar ───────────────────────────────────────────────────────────
+    function renderTagBar() {
+      const bar  = document.getElementById('tag-bar');
+      const tags = [...new Set(allProjects.flatMap(p => p.tags))].sort();
+
+      const all  = makeTagPill('all', true);
+      all.addEventListener('click', () => setTag(null));
+      bar.appendChild(all);
+
+      tags.forEach(tag => {
+        const pill = makeTagPill(tag, false);
+        pill.addEventListener('click', () => setTag(tag));
+        bar.appendChild(pill);
+      });
+    }
+
+    function makeTagPill(label, active) {
+      const btn = document.createElement('button');
+      btn.className = 'tag-pill' + (active ? ' active' : '');
+      btn.textContent = label;
+      btn.dataset.tag = label;
+      return btn;
+    }
+
+    function setTag(tag) {
+      activeTag = tag;
+      document.querySelectorAll('.tag-pill').forEach(p => {
+        p.classList.toggle('active',
+          tag === null ? p.dataset.tag === 'all' : p.dataset.tag === tag
+        );
+      });
+      const filtered = tag ? allProjects.filter(p => p.tags.includes(tag)) : allProjects;
+      renderGrid(filtered);
+    }
+
+    // ── Grid ─────────────────────────────────────────────────────────────
+    function renderGrid(projects) {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      projects.forEach(proj => {
+        const cover = proj.images[0];
+        const card  = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${IMG}/${encodeURIComponent(cover)}" alt="${proj.label}" loading="lazy" onerror="this.style.opacity='0'">
+          <div class="card-label"><span>${proj.label}</span></div>
+        `;
+        card.addEventListener('click', () => {
+          history.pushState({}, '', `/explore/?p=${proj.project}`);
+          showProject(proj);
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    // ── Project view ──────────────────────────────────────────────────────
+    function showProject(proj) {
+      document.getElementById('grid-view').style.display    = 'none';
+      document.getElementById('project-view').style.display = 'block';
+      document.title = `Cosmo — ${proj.label}`;
+
+      document.getElementById('project-name').textContent        = proj.label;
+      document.getElementById('project-description').textContent = proj.description || '';
+      document.getElementById('project-description').style.display = proj.description ? '' : 'none';
+
+      const tagsEl = document.getElementById('project-tags');
+      tagsEl.innerHTML = proj.tags.map(t =>
+        `<span class="project-tag">${t}</span>`
+      ).join('');
+
+      const imgsEl = document.getElementById('project-images');
+      imgsEl.innerHTML = proj.images.map(file => `
+        <div class="project-img-wrap">
+          <img src="${IMG}/${encodeURIComponent(file)}" alt="${proj.label}" loading="lazy" onerror="this.parentElement.style.display='none'">
+        </div>
+      `).join('');
+    }
+
+    // ── Back nav ──────────────────────────────────────────────────────────
+    document.getElementById('back-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      history.pushState({}, '', '/explore/');
+      document.getElementById('project-view').style.display = 'none';
+      document.getElementById('grid-view').style.display    = '';
+      document.title = 'Cosmo — Explore';
+    });
+
+    window.addEventListener('popstate', () => {
+      const params = new URLSearchParams(location.search);
+      const id     = params.get('p');
+      if (id) {
+        const proj = allProjects.find(p => p.project === id);
+        if (proj) { showProject(proj); }
+      } else {
+        document.getElementById('project-view').style.display = 'none';
+        document.getElementById('grid-view').style.display    = '';
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
