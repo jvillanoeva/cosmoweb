@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmo — Upload</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #fafaf8;
+      color: #111;
+      padding: 6vh 6vw;
+      font-size: 0.85rem;
+    }
+    h1 { font-size: 1rem; letter-spacing: 0.1em; margin-bottom: 3rem; }
+    label { display: block; color: #999; margin-bottom: 0.3rem; }
+    input, select, textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #e8e8e4;
+      padding: 0.5rem 0;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: #111;
+      margin-bottom: 1.8rem;
+      outline: none;
+    }
+    input[type="file"] { border-bottom: none; cursor: pointer; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.8rem; }
+    .tag {
+      font-family: inherit;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.7rem;
+      border: 1px solid #e8e8e4;
+      background: transparent;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      color: #999;
+    }
+    .tag.selected { border-color: #111; color: #111; }
+    button[type="submit"] {
+      font-family: inherit;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      background: #111;
+      color: #fafaf8;
+      border: none;
+      padding: 0.7rem 2rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    #status { margin-top: 1.5rem; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>COSMO — ADD PROJECT</h1>
+
+  <form id="upload-form">
+    <label>password</label>
+    <input type="password" name="password" required>
+
+    <label>project id (no spaces, e.g. mutek-2024)</label>
+    <input type="text" name="project" required>
+
+    <label>display name</label>
+    <input type="text" name="label" required>
+
+    <label>nav code (what users type to reach this project's page, optional)</label>
+    <input type="text" name="nav_code" placeholder="e.g. queretaro">
+
+    <label>description (optional)</label>
+    <textarea name="description" rows="2" style="resize:vertical"></textarea>
+
+    <label>tags</label>
+    <div class="tags" id="tag-buttons"></div>
+    <input type="hidden" name="tags" id="tags-input">
+
+    <label>images</label>
+    <input type="file" name="images" multiple accept="image/*">
+
+    <button type="submit">upload _</button>
+  </form>
+
+  <div id="status"></div>
+
+  <script>
+    const TAXONOMY = [
+      'live-shows','culture','experiential','space','architecture',
+      'hospitality','marketing','branding','renders','immersive','art'
+    ];
+
+    const selected = new Set();
+    const container = document.getElementById('tag-buttons');
+    const tagsInput = document.getElementById('tags-input');
+
+    TAXONOMY.forEach(tag => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tag';
+      btn.textContent = tag;
+      btn.addEventListener('click', () => {
+        if (selected.has(tag)) { selected.delete(tag); btn.classList.remove('selected'); }
+        else                   { selected.add(tag);    btn.classList.add('selected'); }
+        tagsInput.value = [...selected].join(',');
+      });
+      container.appendChild(btn);
+    });
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.textContent = 'uploading...';
+
+      const form = new FormData(e.target);
+      try {
+        const res  = await fetch('/api/upload', { method: 'POST', body: form });
+        const data = await res.json();
+        if (res.ok) {
+          status.textContent = `done. ${data.images_added} image(s) added to "${data.project}".`;
+          e.target.reset();
+          selected.clear();
+          document.querySelectorAll('.tag').forEach(b => b.classList.remove('selected'));
+        } else {
+          status.textContent = `error: ${data.error}`;
+        }
+      } catch (err) {
+        status.textContent = `error: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
