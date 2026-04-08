@@ -39,33 +39,54 @@
     }
 
     /* ── Navegar ── */
-    #nav-container {
+    #nav-trigger {
       font-family: var(--font-mono);
       font-size: 0.72rem;
       letter-spacing: 0.04em;
-      position: relative;
+      color: var(--color-text-muted);
+      cursor: default;
     }
-    #nav-menu {
+
+    /* ── Filter bar (revealed on navegar hover) ── */
+    #filter-bar {
+      position: fixed;
+      top: var(--page-y);
+      left: 0; right: 0;
+      padding: 2.2rem var(--page-x) 0;
       display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      padding-top: 0.8rem;
+      flex-wrap: nowrap;
+      gap: 1.6rem;
+      overflow-x: auto;
+      scrollbar-width: none;
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-4px);
+      transform: translateY(-6px);
       transition: opacity 180ms ease, transform 180ms ease;
+      background: var(--color-bg);
+      z-index: calc(var(--z-overlay) - 1);
     }
-    #nav-container:hover #nav-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    #nav-menu a { color: var(--color-text-muted); text-decoration: none; text-transform: uppercase; white-space: nowrap; }
-    #nav-menu a:hover { color: var(--color-text); }
-    #nav-trigger { color: var(--color-text-muted); cursor: default; }
+    #filter-bar::-webkit-scrollbar { display: none; }
+    #filter-bar.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    .filter-link {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 150ms ease;
+    }
+    .filter-link:hover,
+    .filter-link.active { color: var(--color-text); }
 
     /* ── Grid view ── */
     #grid-view {
-      padding-top: 11vh;
+      padding-top: 13vh;
     }
 
     /* ── Grid ── */
@@ -232,13 +253,10 @@
 
   <div id="header">
     <a id="site-title" href="/">Cosmo</a>
-    <div id="nav-container">
-      <div id="nav-menu">
-        <a href="/queretaro/">Querétaro</a>
-      </div>
-      <div id="nav-trigger">navegar _</div>
-    </div>
+    <div id="nav-trigger">navegar _</div>
   </div>
+
+  <div id="filter-bar"></div>
 
   <!-- Grid view -->
   <div id="grid-view">
@@ -294,8 +312,60 @@
         if (proj) { showProject(proj); return; }
       }
 
+      buildFilterBar();
       renderGrid(allProjects);
     }
+
+    // ── Filter bar ────────────────────────────────────────────────────────
+    function buildFilterBar() {
+      const bar  = document.getElementById('filter-bar');
+      const tags = [...new Set(allProjects.flatMap(p => p.tags))].sort();
+
+      const all = makeFilterLink('all', true);
+      all.addEventListener('click', () => setFilter(null, all));
+      bar.appendChild(all);
+
+      tags.forEach(tag => {
+        const btn = makeFilterLink(tag, false);
+        btn.addEventListener('click', () => setFilter(tag, btn));
+        bar.appendChild(btn);
+      });
+    }
+
+    function makeFilterLink(label, active) {
+      const btn = document.createElement('button');
+      btn.className = 'filter-link' + (active ? ' active' : '');
+      btn.textContent = label;
+      return btn;
+    }
+
+    function setFilter(tag, el) {
+      document.querySelectorAll('.filter-link').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      const filtered = tag ? allProjects.filter(p => p.tags.includes(tag)) : allProjects;
+      renderGrid(filtered);
+    }
+
+    // ── Navegar hover ─────────────────────────────────────────────────────
+    const navTrigger = document.getElementById('nav-trigger');
+    const filterBar  = document.getElementById('filter-bar');
+    let filterVisible = false;
+
+    navTrigger.addEventListener('mouseenter', () => {
+      filterBar.classList.add('visible');
+      filterVisible = true;
+    });
+    filterBar.addEventListener('mouseleave', () => {
+      filterBar.classList.remove('visible');
+      filterVisible = false;
+    });
+    navTrigger.addEventListener('mouseleave', (e) => {
+      // keep open if cursor moves into the filter bar
+      if (!filterBar.matches(':hover')) {
+        filterBar.classList.remove('visible');
+        filterVisible = false;
+      }
+    });
 
     // ── Grid ─────────────────────────────────────────────────────────────
     function renderGrid(projects) {
