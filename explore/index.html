@@ -65,39 +65,23 @@
 
     /* ── Grid view ── */
     #grid-view {
-      padding-top: 9vh;
+      padding-top: 11vh;
     }
-
-    /* ── Tag bar ── */
-    #tag-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      padding: 0 var(--page-x) 2vh;
-    }
-
-    .tag-pill {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      border: 1px solid var(--color-surface);
-      padding: 0.3rem 0.8rem;
-      cursor: pointer;
-      background: transparent;
-      transition: all 150ms ease;
-      user-select: none;
-    }
-    .tag-pill:hover { border-color: var(--color-text); color: var(--color-text); }
-    .tag-pill.active { border-color: var(--color-text); color: var(--color-text); background: var(--color-text); color: var(--color-bg); }
 
     /* ── Grid ── */
+    /*
+      Golden ratio grid:
+        page-x = 6vw, gap = 2.5vw
+        5 cols across 78vw → each col ≈ 15.6vw
+        Hero (3col × 2row): 51.8vw wide × 32.5vw tall → ratio 1.594 ≈ φ (1.618)
+    */
     #grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      padding: 0 2px 2px;
+      grid-template-columns: repeat(5, 1fr);
+      grid-auto-rows: 15vw;
+      grid-auto-flow: dense;
+      gap: 2.5vw;
+      padding: 0 var(--page-x) var(--page-y);
     }
 
     .card {
@@ -105,11 +89,26 @@
       overflow: hidden;
       cursor: pointer;
       background: var(--color-surface);
+      grid-column: span 1;
+      grid-row: span 1;
     }
 
-    /* Collage rhythm: every 5th item full-width */
-    .card:nth-child(5n+1) { grid-column: 1 / -1; aspect-ratio: 16/7; }
-    .card:not(:nth-child(5n+1)) { aspect-ratio: 4/3; }
+    /* Non-hero rhythm: occasional wide card for visual variety */
+    .card:not(.card--hero):nth-child(4n+3) { grid-column: span 2; }
+
+    /* Hero: 3col × 2row ≈ φ — alternates left / right */
+    .card.card--hero-left  { grid-column: 1 / 4; grid-row: span 2; }
+    .card.card--hero-right { grid-column: 3 / 6; grid-row: span 2; }
+
+    @media (max-width: 700px) {
+      #grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 42vw;
+      }
+      .card:not(.card--hero-left):not(.card--hero-right):nth-child(4n+3) { grid-column: span 1; }
+      .card.card--hero-left,
+      .card.card--hero-right { grid-column: 1 / -1; grid-row: span 2; }
+    }
 
     .card img {
       width: 100%; height: 100%;
@@ -233,11 +232,16 @@
 
   <div id="header">
     <a id="site-title" href="/">Cosmo</a>
+    <div id="nav-container">
+      <div id="nav-menu">
+        <a href="/queretaro/">Querétaro</a>
+      </div>
+      <div id="nav-trigger">navegar _</div>
+    </div>
   </div>
 
   <!-- Grid view -->
   <div id="grid-view">
-    <div id="tag-bar"></div>
     <div id="grid"></div>
   </div>
 
@@ -257,17 +261,29 @@
   <script>
     const API      = 'https://cosmo.ccoossmmoo.com';
     const IMG      = `${API}/images`;
+    // Local fallback paths (relative from explore/ to cosmo_images/)
+    const LOCAL_TAGS = './local-tags.json';
+    const LOCAL_IMG  = 'https://cosmo.ccoossmmoo.com/images';
     let allProjects = [];
     let activeTag   = null;
+    let imgBase     = IMG;
 
     // ── Boot ──────────────────────────────────────────────────────────────
     async function init() {
       try {
         allProjects = await fetch(`${API}/api/projects`).then(r => r.json());
+        imgBase = IMG;
       } catch (e) {
-        document.getElementById('grid').innerHTML =
-          '<p style="padding:4vh 6vw;font-family:monospace;color:#999;font-size:0.75rem;">connecting to lola...</p>';
-        return;
+        // Lola unreachable — try local tags.json from Box
+        try {
+          const data = await fetch(LOCAL_TAGS).then(r => r.json());
+          allProjects = (data.projects || []).filter(p => p.project !== 'unknown' && p.project !== 'exclude');
+          imgBase = LOCAL_IMG;
+        } catch (e2) {
+          document.getElementById('grid').innerHTML =
+            '<p style="padding:4vh 6vw;font-family:monospace;color:#999;font-size:0.75rem;">connecting to lola...</p>';
+          return;
+        }
       }
 
       const params    = new URLSearchParams(location.search);
@@ -278,55 +294,24 @@
         if (proj) { showProject(proj); return; }
       }
 
-      renderTagBar();
       renderGrid(allProjects);
-    }
-
-    // ── Tag bar ───────────────────────────────────────────────────────────
-    function renderTagBar() {
-      const bar  = document.getElementById('tag-bar');
-      const tags = [...new Set(allProjects.flatMap(p => p.tags))].sort();
-
-      const all  = makeTagPill('all', true);
-      all.addEventListener('click', () => setTag(null));
-      bar.appendChild(all);
-
-      tags.forEach(tag => {
-        const pill = makeTagPill(tag, false);
-        pill.addEventListener('click', () => setTag(tag));
-        bar.appendChild(pill);
-      });
-    }
-
-    function makeTagPill(label, active) {
-      const btn = document.createElement('button');
-      btn.className = 'tag-pill' + (active ? ' active' : '');
-      btn.textContent = label;
-      btn.dataset.tag = label;
-      return btn;
-    }
-
-    function setTag(tag) {
-      activeTag = tag;
-      document.querySelectorAll('.tag-pill').forEach(p => {
-        p.classList.toggle('active',
-          tag === null ? p.dataset.tag === 'all' : p.dataset.tag === tag
-        );
-      });
-      const filtered = tag ? allProjects.filter(p => p.tags.includes(tag)) : allProjects;
-      renderGrid(filtered);
     }
 
     // ── Grid ─────────────────────────────────────────────────────────────
     function renderGrid(projects) {
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
+      let heroIdx = 0;
       projects.forEach(proj => {
         const cover = proj.images[0];
         const card  = document.createElement('div');
-        card.className = 'card';
+        if (proj.featured) {
+          card.className = 'card ' + (heroIdx++ % 2 === 0 ? 'card--hero-left' : 'card--hero-right');
+        } else {
+          card.className = 'card';
+        }
         card.innerHTML = `
-          <img src="${IMG}/${encodeURIComponent(cover)}" alt="${proj.label}" loading="lazy" onerror="this.style.opacity='0'">
+          <img src="${imgBase}/${encodeURIComponent(cover)}" alt="${proj.label}" loading="lazy" onerror="this.style.opacity='0'">
           <div class="card-label"><span>${proj.label}</span></div>
         `;
         card.addEventListener('click', () => {
@@ -355,7 +340,7 @@
       const imgsEl = document.getElementById('project-images');
       imgsEl.innerHTML = proj.images.map(file => `
         <div class="project-img-wrap">
-          <img src="${IMG}/${encodeURIComponent(file)}" alt="${proj.label}" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <img src="${imgBase}/${encodeURIComponent(file)}" alt="${proj.label}" loading="lazy" onerror="this.parentElement.style.display='none'">
         </div>
       `).join('');
     }
