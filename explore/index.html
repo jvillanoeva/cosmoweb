@@ -415,10 +415,7 @@
     }
 
     // ── Back nav ──────────────────────────────────────────────────────────
-    document.getElementById('back-btn').addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = 'https://ccoossmmoo.com/explore/';
-    });
+    // href on the <a> tag handles navigation directly — no JS needed
 
     window.addEventListener('popstate', () => {
       const params = new URLSearchParams(location.search);
