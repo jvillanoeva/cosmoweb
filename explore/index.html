@@ -233,20 +233,18 @@
       top: 0; right: 0; bottom: 0;
       left: 36%;
       overflow-y: auto;
-      padding-top: var(--header-clearance);
-      padding-right: var(--page-x);
-      padding-bottom: var(--page-y);
+      padding-top: 0;
+      padding-right: 0;
+      padding-bottom: 0;
     }
 
     #project-images {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 2px;
+      display: flex;
+      flex-direction: column;
     }
 
-    .project-img-wrap { aspect-ratio: 4/3; overflow: hidden; background: var(--color-surface); }
-    .project-img-wrap:first-child { grid-column: 1 / -1; aspect-ratio: 16/7; }
-    .project-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .project-img-wrap { width: 100%; background: var(--color-surface); }
+    .project-img-wrap img { width: 100%; height: auto; display: block; }
   </style>
 </head>
 <body>
@@ -265,7 +263,7 @@
 
   <!-- Project view -->
   <div id="project-view">
-    <a id="back-btn" href="/explore/">← explore</a>
+    <a id="back-btn" href="https://ccoossmmoo.com/explore/">← explore</a>
     <div id="project-left">
       <div id="project-name"></div>
       <div id="project-description"></div>
@@ -416,10 +414,7 @@
     // ── Back nav ──────────────────────────────────────────────────────────
     document.getElementById('back-btn').addEventListener('click', (e) => {
       e.preventDefault();
-      history.pushState({}, '', '/explore/');
-      document.getElementById('project-view').style.display = 'none';
-      document.getElementById('grid-view').style.display    = '';
-      document.title = 'Cosmo — Explore';
+      window.location.href = 'https://ccoossmmoo.com/explore/';
     });
 
     window.addEventListener('popstate', () => {
