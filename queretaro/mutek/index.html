@@ -79,7 +79,19 @@
       margin-bottom: 1.8vw;
       break-inside: avoid;
       background: #1a1a1a;
+      cursor: zoom-in;
     }
+
+    /* ── Lightbox ── */
+    #lightbox {
+      position: fixed; inset: 0;
+      background: rgba(10,10,10,0.97);
+      z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; display: block; cursor: default; }
   </style>
 </head>
 <body>
@@ -119,5 +131,18 @@
     </div>
   </div>
 
+  <div id="lightbox"><img id="lb-img" src="" alt=""></div>
+
+  <script>
+    const lightbox = document.getElementById('lightbox');
+    const lbImg    = document.getElementById('lb-img');
+    function openLightbox(src) { lbImg.src = src; lightbox.classList.add('open'); }
+    function closeLightbox()   { lightbox.classList.remove('open'); lbImg.src = ''; }
+    lightbox.addEventListener('click', e => { if (e.target !== lbImg) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    document.querySelectorAll('.gallery-img').forEach(img => {
+      img.addEventListener('click', function() { if (this.src) openLightbox(this.src); });
+    });
+  </script>
 </body>
 </html>
