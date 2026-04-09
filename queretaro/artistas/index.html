@@ -104,6 +104,22 @@
     }
     .work-thumb img.fade { opacity: 0; }
 
+    /* ── Arrow nav ── */
+    #arrow-nav {
+      position: fixed;
+      bottom: var(--page-y); left: var(--page-x);
+      display: flex; gap: 1.4rem;
+      z-index: calc(var(--z-overlay) - 1);
+    }
+    .nav-arrow {
+      font-family: var(--font-mono); font-size: 1rem;
+      background: none; border: none;
+      color: var(--color-text-muted);
+      cursor: pointer; padding: 0;
+      transition: color 150ms ease; user-select: none;
+    }
+    .nav-arrow:hover { color: var(--color-text); }
+
     /* ── Lightbox ── */
     #lightbox {
       position: fixed; inset: 0;
@@ -140,6 +156,10 @@
 
   <div id="lightbox"><img id="lb-img" src="" alt=""></div>
   <div id="left"></div>
+  <div id="arrow-nav">
+    <button class="nav-arrow" id="btn-prev">←</button>
+    <button class="nav-arrow" id="btn-next">→</button>
+  </div>
 
   <div id="right">
     <div id="portrait-wrap">
@@ -192,6 +212,7 @@
     const nameList   = document.getElementById('left');
     const portraitEl = document.getElementById('portrait-img');
     const workImgs   = document.querySelectorAll('.work-img');
+    let currentIdx   = 0;
 
     people.forEach((p, i) => {
       const el = document.createElement('div');
@@ -202,20 +223,34 @@
     });
 
     function showPerson(idx) {
+      currentIdx = idx;
       const p = people[idx];
       document.querySelectorAll('.person-name').forEach((el, i) => el.classList.toggle('active', i === idx));
       portraitEl.classList.add('fade');
-      setTimeout(() => { portraitEl.src = p.portrait; portraitEl.classList.remove('fade'); }, 150);
+      setTimeout(() => {
+        portraitEl.src = p.portrait;
+        portraitEl.style.objectFit      = p.portraitFit      || 'cover';
+        portraitEl.style.objectPosition = p.portraitPosition || 'center';
+        portraitEl.classList.remove('fade');
+      }, 150);
       workImgs.forEach((img, i) => {
         img.classList.add('fade');
         setTimeout(() => {
           img.src = p.work[i] || '';
+          img.style.objectPosition = (p.workPositions && p.workPositions[i]) || 'center';
           img.parentElement.style.visibility = p.work[i] ? '' : 'hidden';
           img.classList.remove('fade');
         }, 150);
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    function navigate(dir) {
+      showPerson((currentIdx + dir + people.length) % people.length);
+    }
+
+    document.getElementById('btn-prev').addEventListener('click', () => navigate(-1));
+    document.getElementById('btn-next').addEventListener('click', () => navigate(+1));
 
     showPerson(0);
 
@@ -228,7 +263,12 @@
       lightbox.addEventListener('transitionend', () => { lbImg.src = ''; }, { once: true });
     }
     lightbox.addEventListener('click', e => { if (e.target !== lbImg) closeLightbox(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape')     closeLightbox();
+      if (lightbox.classList.contains('open')) return;
+      if (e.key === 'ArrowLeft')  navigate(-1);
+      if (e.key === 'ArrowRight') navigate(+1);
+    });
 
     document.getElementById('portrait-img').addEventListener('click', function() {
       if (this.src) openLightbox(this.src);

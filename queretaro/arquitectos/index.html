@@ -117,6 +117,26 @@
     }
     .work-thumb img.fade { opacity: 0; }
 
+    /* ── Arrow nav ── */
+    #arrow-nav {
+      position: fixed;
+      bottom: var(--page-y);
+      left: var(--page-x);
+      display: flex;
+      gap: 1.4rem;
+      z-index: calc(var(--z-overlay) - 1);
+    }
+    .nav-arrow {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      background: none; border: none;
+      color: var(--color-text-muted);
+      cursor: pointer; padding: 0;
+      transition: color 150ms ease;
+      user-select: none;
+    }
+    .nav-arrow:hover { color: var(--color-text); }
+
     /* ── Lightbox ── */
     #lightbox {
       position: fixed; inset: 0;
@@ -154,8 +174,12 @@
   <!-- Lightbox -->
   <div id="lightbox"><img id="lb-img" src="" alt=""></div>
 
-  <!-- Fixed left: name list -->
+  <!-- Fixed left: name list + arrows -->
   <div id="left"></div>
+  <div id="arrow-nav">
+    <button class="nav-arrow" id="btn-prev">←</button>
+    <button class="nav-arrow" id="btn-next">→</button>
+  </div>
 
   <!-- Scrollable right: portrait + work -->
   <div id="right">
@@ -219,11 +243,13 @@
       {
         name: 'Andrés Saavedra',
         portrait: `${BASE}/Arquitectos/Andres Saavedra/000104540033.JPG`,
+        portraitFit: 'contain',           // show full face, no crop
         work: [
           `${BASE}/Arquitectos/Andres Saavedra/work/000104530010.JPG`,
           `${BASE}/Arquitectos/Andres Saavedra/work/DJI_0322.jpg`,
           `${BASE}/Arquitectos/Andres Saavedra/work/LL223523.jpg`,
-        ]
+        ],
+        workPositions: ['center 18%', 'center center', 'center center'],
       },
       {
         name: 'Michelle Rojkind',
@@ -239,6 +265,7 @@
     const nameList   = document.getElementById('left');
     const portraitEl = document.getElementById('portrait-img');
     const workImgs   = document.querySelectorAll('.work-img');
+    let currentIdx   = 0;
 
     people.forEach((p, i) => {
       const el = document.createElement('div');
@@ -249,21 +276,39 @@
     });
 
     function showPerson(idx) {
+      currentIdx = idx;
       const p = people[idx];
       document.querySelectorAll('.person-name').forEach((el, i) => el.classList.toggle('active', i === idx));
+
+      // portrait — respect per-person fit + position
       portraitEl.classList.add('fade');
-      setTimeout(() => { portraitEl.src = p.portrait; portraitEl.classList.remove('fade'); }, 150);
+      setTimeout(() => {
+        portraitEl.src = p.portrait;
+        portraitEl.style.objectFit      = p.portraitFit      || 'cover';
+        portraitEl.style.objectPosition = p.portraitPosition || 'center';
+        portraitEl.classList.remove('fade');
+      }, 150);
+
+      // work images — respect per-image position
       workImgs.forEach((img, i) => {
         img.classList.add('fade');
         setTimeout(() => {
           img.src = p.work[i] || '';
+          img.style.objectPosition = (p.workPositions && p.workPositions[i]) || 'center';
           img.parentElement.style.visibility = p.work[i] ? '' : 'hidden';
           img.classList.remove('fade');
         }, 150);
       });
-      // scroll right panel back to top on person switch
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    function navigate(dir) {
+      showPerson((currentIdx + dir + people.length) % people.length);
+    }
+
+    document.getElementById('btn-prev').addEventListener('click', () => navigate(-1));
+    document.getElementById('btn-next').addEventListener('click', () => navigate(+1));
 
     showPerson(0);
 
@@ -276,7 +321,12 @@
       lightbox.addEventListener('transitionend', () => { lbImg.src = ''; }, { once: true });
     }
     lightbox.addEventListener('click', e => { if (e.target !== lbImg) closeLightbox(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape')      closeLightbox();
+      if (lightbox.classList.contains('open')) return;
+      if (e.key === 'ArrowLeft')   navigate(-1);
+      if (e.key === 'ArrowRight')  navigate(+1);
+    });
 
     document.getElementById('portrait-img').addEventListener('click', function() {
       if (this.src) openLightbox(this.src);
