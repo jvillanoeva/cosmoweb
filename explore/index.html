@@ -172,10 +172,11 @@
       position: fixed;
       top: 0; left: 0; bottom: 0;
       width: 36%;
-      padding: var(--header-clearance) var(--page-x) var(--page-y);
+      padding: var(--header-clearance) 2vw var(--page-y) var(--page-x);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      overflow: hidden;
     }
 
     #back-btn {
@@ -193,12 +194,14 @@
 
     #project-name {
       font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3.6rem);
+      font-size: clamp(1.6rem, 3vw, 3rem);
       letter-spacing: 0.04em;
       color: var(--color-text);
       text-transform: uppercase;
-      line-height: 1;
+      line-height: 1.05;
       margin-bottom: 0.6rem;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     #project-description {
