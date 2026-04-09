@@ -10,50 +10,32 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
-      width: 100%; height: 100%;
+      width: 100%; min-height: 100%;
       background: var(--color-bg);
       font-family: var(--font-body);
       -webkit-font-smoothing: antialiased;
-      overflow: hidden;
       cursor: default;
-      user-select: none;
     }
 
     #header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
+      position: fixed; top: 0; left: 0; right: 0;
       padding: var(--page-y) var(--page-x) 0;
       z-index: var(--z-overlay);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      background: var(--color-bg);
     }
-
     #site-title {
       font-family: var(--font-display);
       font-size: clamp(0.85rem, 1.2vw, 1rem);
-      letter-spacing: 0.14em;
-      color: var(--color-text);
-      text-transform: uppercase;
-      text-decoration: none;
+      letter-spacing: 0.14em; color: var(--color-text);
+      text-transform: uppercase; text-decoration: none;
     }
-
-    #nav-container {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
-      position: relative;
-    }
+    #nav-container { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; position: relative; }
     #nav-trigger { color: var(--color-text-muted); cursor: default; }
     #nav-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      position: absolute;
-      top: 100%; right: 0;
-      padding-top: 0.8rem;
-      opacity: 0; pointer-events: none;
-      transform: translateY(-4px);
+      display: flex; flex-direction: column; gap: 0.55rem;
+      position: absolute; top: 100%; right: 0; padding-top: 0.8rem;
+      opacity: 0; pointer-events: none; transform: translateY(-4px);
       transition: opacity 180ms ease, transform 180ms ease;
     }
     #nav-container:hover #nav-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
@@ -62,107 +44,41 @@
 
     #sub-nav {
       position: fixed;
-      top: calc(var(--page-y) + 1.6rem);
-      left: var(--page-x);
-      display: flex;
-      align-items: center;
-      gap: 1.8rem;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
+      top: calc(var(--page-y) + 1.6rem); left: var(--page-x);
+      display: flex; align-items: center; gap: 1.8rem;
+      font-family: var(--font-mono); font-size: 0.62rem;
+      letter-spacing: 0.07em; text-transform: uppercase;
       z-index: calc(var(--z-overlay) - 1);
+      background: var(--color-bg);
     }
     #sub-nav a { color: var(--color-text-muted); text-decoration: none; transition: color 150ms ease; }
     #sub-nav a:hover { color: var(--color-text); }
     #sub-nav a.active { color: var(--color-text); }
     #sub-nav .back { padding-right: 1rem; border-right: 1px solid var(--color-surface); }
 
-    #layout {
-      position: fixed;
-      top: var(--header-clearance);
-      left: 0; right: 0; bottom: 0;
-      display: flex;
-      align-items: center;
-    }
-
-    #left {
-      width: 38%;
+    /* ── Scrollable content ── */
+    #content {
+      padding-top: var(--header-clearance);
       padding-left: var(--page-x);
-      padding-right: 4vw;
-      flex-shrink: 0;
-    }
-
-    #parent-label {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-
-    #section-name {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3.6rem);
-      letter-spacing: 0.04em;
-      color: var(--color-text);
-      text-transform: uppercase;
-      line-height: 1;
-      margin-bottom: 1.6rem;
-    }
-
-    #section-body {
-      font-style: italic;
-      font-size: clamp(0.85rem, 1.3vw, 1.15rem);
-      color: var(--color-text);
-      line-height: 1.6;
-      letter-spacing: 0.01em;
-      padding-left: 1.4rem;
-      border-left: 1px solid var(--color-surface);
-    }
-
-    #right {
-      flex: 1;
-      height: 100%;
       padding-right: var(--page-x);
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
+      padding-bottom: var(--page-y);
     }
 
-    #visual {
+    #gallery {
+      columns: 3;
+      column-gap: 1.8vw;
+    }
+
+    @media (max-width: 700px) {
+      #gallery { columns: 1; }
+    }
+
+    .gallery-img {
       width: 100%;
-      max-width: 54vw;
-      height: 68vh;
+      display: block;
+      margin-bottom: 1.8vw;
+      break-inside: avoid;
       background: var(--color-surface);
-      display: flex;
-      align-items: flex-end;
-      justify-content: flex-start;
-      padding: 2.4rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    #visual-number {
-      position: absolute;
-      top: -0.1em; right: -0.05em;
-      font-family: var(--font-display);
-      font-size: clamp(12rem, 20vw, 22rem);
-      letter-spacing: -0.04em;
-      color: var(--color-bg);
-      line-height: 1;
-      pointer-events: none;
-    }
-
-    #visual-label {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      position: relative;
-      z-index: 1;
     }
   </style>
 </head>
@@ -187,21 +103,20 @@
     <a href="/queretaro/mutek/">mutek</a>
   </nav>
 
-  <div id="layout">
-    <div id="left">
-      <div id="parent-label">Querétaro</div>
-      <div id="section-name">Museos</div>
-      <div id="section-body">
-        Los guardianes de la memoria<br>
-        y la imaginación colectiva.
-      </div>
-    </div>
-
-    <div id="right">
-      <div id="visual">
-        <div id="visual-number">03</div>
-        <div id="visual-label">Querétaro / Museos</div>
-      </div>
+  <div id="content">
+    <div id="gallery">
+      <img class="gallery-img" src="/queretaro/assets/Museos/Drawing-on-the-Water-Surface-Created-by-the-Dance-of-Koi-and-People-Infinity_04-2-1.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/superblue-suspension-drift-meadow-model1-orioltarridas.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/smg2103-a-whole-new-world-universe-of-water-particles-and-flowers-and-people-4x3-5mb.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/65bd0b1da214191c650a768b_experience-guide-es-devlin.webp" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/54588_dimensional_sampling_yuxi_cao_4-Cropped-cover.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/immersive-art-installation-exhibition.png" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/UFO_NXT_Museum2.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/nl-nxtmuseum.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/IMG_8965.webp" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/_DSC7267.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/image.jpg" loading="lazy" onerror="this.style.display='none'">
+      <img class="gallery-img" src="/queretaro/assets/Museos/photo-fd2dc898-aa27-4245-8908-867b182752b6.avif" loading="lazy" onerror="this.style.display='none'">
     </div>
   </div>
 

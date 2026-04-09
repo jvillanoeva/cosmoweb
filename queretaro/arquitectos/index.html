@@ -21,55 +21,28 @@
 
     /* ── Header ── */
     #header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
+      position: fixed; top: 0; left: 0; right: 0;
       padding: var(--page-y) var(--page-x) 0;
       z-index: var(--z-overlay);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      display: flex; justify-content: space-between; align-items: flex-start;
     }
-
     #site-title {
       font-family: var(--font-display);
       font-size: clamp(0.85rem, 1.2vw, 1rem);
       letter-spacing: 0.14em;
       color: var(--color-text);
-      text-transform: uppercase;
-      text-decoration: none;
+      text-transform: uppercase; text-decoration: none;
     }
-
-    #nav-container {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
-      position: relative;
-    }
-
+    #nav-container { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; position: relative; }
     #nav-trigger { color: var(--color-text-muted); cursor: default; }
-
     #nav-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      padding-top: 0.8rem;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-4px);
+      display: flex; flex-direction: column; gap: 0.55rem;
+      position: absolute; top: 100%; right: 0; padding-top: 0.8rem;
+      opacity: 0; pointer-events: none; transform: translateY(-4px);
       transition: opacity 180ms ease, transform 180ms ease;
     }
-    #nav-container:hover #nav-menu {
-      opacity: 1; pointer-events: auto; transform: translateY(0);
-    }
-    #nav-menu a {
-      color: var(--color-text-muted);
-      text-decoration: none;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
+    #nav-container:hover #nav-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    #nav-menu a { color: var(--color-text-muted); text-decoration: none; text-transform: uppercase; white-space: nowrap; }
     #nav-menu a:hover { color: var(--color-text); }
 
     /* ── Sub-nav ── */
@@ -77,122 +50,96 @@
       position: fixed;
       top: calc(var(--page-y) + 1.6rem);
       left: var(--page-x);
-      display: flex;
-      align-items: center;
-      gap: 1.8rem;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
+      display: flex; align-items: center; gap: 1.8rem;
+      font-family: var(--font-mono); font-size: 0.62rem;
+      letter-spacing: 0.07em; text-transform: uppercase;
       z-index: calc(var(--z-overlay) - 1);
     }
-
-    #sub-nav a {
-      color: var(--color-text-muted);
-      text-decoration: none;
-      transition: color 150ms ease;
-    }
+    #sub-nav a { color: var(--color-text-muted); text-decoration: none; transition: color 150ms ease; }
     #sub-nav a:hover { color: var(--color-text); }
     #sub-nav a.active { color: var(--color-text); }
-
-    #sub-nav .back {
-      color: var(--color-text-muted);
-      padding-right: 1rem;
-      border-right: 1px solid var(--color-surface);
-    }
-    #sub-nav .back:hover { color: var(--color-text); }
+    #sub-nav .back { padding-right: 1rem; border-right: 1px solid var(--color-surface); }
 
     /* ── Layout ── */
     #layout {
       position: fixed;
-      top: var(--header-clearance);
-      left: 0; right: 0; bottom: 0;
-      display: flex;
-      align-items: center;
+      top: var(--header-clearance); left: 0; right: 0; bottom: 0;
+      display: flex; align-items: stretch;
     }
 
-    /* ── Left column ── */
+    /* ── Left: name list ── */
     #left {
-      width: 38%;
+      width: 36%;
       padding-left: var(--page-x);
       padding-right: 4vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       flex-shrink: 0;
+      gap: 0.1rem;
     }
 
-    #parent-label {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-
-    #section-name {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3.6rem);
-      letter-spacing: 0.04em;
-      color: var(--color-text);
-      text-transform: uppercase;
-      line-height: 1;
-      margin-bottom: 1.6rem;
-    }
-
-    #section-body {
+    .person-name {
+      font-family: var(--font-body);
       font-style: italic;
-      font-size: clamp(0.85rem, 1.3vw, 1.15rem);
-      color: var(--color-text);
-      line-height: 1.6;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      color: var(--color-text-muted);
       letter-spacing: 0.01em;
-      padding-left: 1.4rem;
-      border-left: 1px solid var(--color-surface);
+      line-height: 1.4;
+      cursor: pointer;
+      transition: color 150ms ease;
+      padding: 0.15rem 0;
     }
+    .person-name:hover,
+    .person-name.active { color: var(--color-text); }
 
-    /* ── Right column ── */
+    /* ── Right: image panel ── */
     #right {
       flex: 1;
-      height: 100%;
       padding-right: var(--page-x);
+      padding-top: 2vh;
+      padding-bottom: 4vh;
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    #visual {
-      width: 100%;
-      max-width: 54vw;
-      height: 68vh;
-      background: var(--color-surface);
-      display: flex;
-      align-items: flex-end;
-      justify-content: flex-start;
-      padding: 2.4rem;
-      position: relative;
+      flex-direction: column;
+      gap: 0.8rem;
       overflow: hidden;
     }
 
-    #visual-number {
-      position: absolute;
-      top: -0.1em;
-      right: -0.05em;
-      font-family: var(--font-display);
-      font-size: clamp(12rem, 20vw, 22rem);
-      letter-spacing: -0.04em;
-      color: var(--color-bg);
-      line-height: 1;
-      pointer-events: none;
-      user-select: none;
+    #portrait-wrap {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      background: var(--color-surface);
     }
 
-    #visual-label {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      position: relative;
-      z-index: 1;
+    #portrait-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 300ms ease;
     }
+    #portrait-wrap img.fade { opacity: 0; }
+
+    #work-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      height: 16%;
+      flex-shrink: 0;
+    }
+
+    .work-thumb {
+      background: var(--color-surface);
+      overflow: hidden;
+    }
+    .work-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 300ms ease;
+    }
+    .work-thumb img.fade { opacity: 0; }
   </style>
 </head>
 <body>
@@ -217,22 +164,114 @@
   </nav>
 
   <div id="layout">
-    <div id="left">
-      <div id="parent-label">Querétaro</div>
-      <div id="section-name">Arquitectos</div>
-      <div id="section-body">
-        Los que configuran el espacio<br>
-        donde todo ocurre.
-      </div>
-    </div>
-
+    <div id="left" id="name-list"></div>
     <div id="right">
-      <div id="visual">
-        <div id="visual-number">01</div>
-        <div id="visual-label">Querétaro / Arquitectos</div>
+      <div id="portrait-wrap">
+        <img id="portrait-img" src="" alt="">
+      </div>
+      <div id="work-strip">
+        <div class="work-thumb"><img class="work-img" src="" alt=""></div>
+        <div class="work-thumb"><img class="work-img" src="" alt=""></div>
+        <div class="work-thumb"><img class="work-img" src="" alt=""></div>
       </div>
     </div>
   </div>
 
+  <script>
+    const BASE = '/queretaro/assets';
+    const people = [
+      {
+        name: 'Abel Perles',
+        portrait: `${BASE}/Arquitectos/Abel Perles/053A2790.jpg`,
+        work: [
+          `${BASE}/Arquitectos/Abel Perles/CCT-330-170.jpg`,
+          `${BASE}/Arquitectos/Abel Perles/PRODUCTORA_TEOTITLAN_Luis-Gallardo-1.jpg`,
+        ]
+      },
+      {
+        name: 'Alejandro Dacosta',
+        portrait: `${BASE}/Arquitectos/Alejandro Dacosta/5J6A8211-Edit copy.jpg`,
+        work: [
+          `${BASE}/Arquitectos/Alejandro Dacosta/work/Lobbie-villas-flamingos-holbox.webp`,
+          `${BASE}/Arquitectos/Alejandro Dacosta/work/alejandro-dacosta-casa-elisa-Collater.al-014.jpg`,
+          `${BASE}/Arquitectos/Alejandro Dacosta/work/elsilencio02.jpg`,
+        ]
+      },
+      {
+        name: 'Carlos H Matos',
+        portrait: `${BASE}/Arquitectos/Carlos H Matos/n5TZR64Ef7tyNJVgniTAWH.jpg`,
+        work: [
+          `${BASE}/Arquitectos/Carlos H Matos/work/casa-monte-carlos-matos-mexico_dezeen_2364_col_6-scaled.jpg`,
+          `${BASE}/Arquitectos/Carlos H Matos/work/chm-2022-01-ap-1-1-image-copy.webp`,
+          `${BASE}/Arquitectos/Carlos H Matos/work/QNwAXw32qAKevTnQdg5KGJ.jpg`,
+        ]
+      },
+      {
+        name: 'Hector Esrawe',
+        portrait: `${BASE}/Arquitectos/Hector Esrawe/dezeen-awards-2021-judges-Hector-Esrawe-sq.jpg`,
+        work: [
+          `${BASE}/Arquitectos/Hector Esrawe/work/7-Materia-Prima.webp`,
+          `${BASE}/Arquitectos/Hector Esrawe/work/Destileria-6.webp`,
+          `${BASE}/Arquitectos/Hector Esrawe/work/Genevieve_Lutkin_ARCA-1.webp`,
+        ]
+      },
+      {
+        name: 'Ludwig Godefroy',
+        portrait: `${BASE}/Arquitectos/Ludwig Godefroy/fullsizerender-vsco.webp`,
+        work: [
+          `${BASE}/Arquitectos/Ludwig Godefroy/work/casa-to-ludwig-godefroy-mexico-architecture-hotel_dezeen_2364_col_6.jpg`,
+          `${BASE}/Arquitectos/Ludwig Godefroy/work/casa-to-ludwig-godefroy-mexico-hotel-architecture_dezeen_2364_col_5.jpg`,
+          `${BASE}/Arquitectos/Ludwig Godefroy/work/ludwig-godefroy-architecture-ramiro-chaves-foro-normandie.jpg`,
+        ]
+      },
+      {
+        name: 'Michelle Rojkind',
+        portrait: `${BASE}/Arquitectos/Michelle Rojkind/RHTLAKG36JGJ3PBSAPV6OUIRIA.avif`,
+        work: [
+          `${BASE}/Arquitectos/Michelle Rojkind/work/63614.webp`,
+          `${BASE}/Arquitectos/Michelle Rojkind/work/Michel Rojkind 9.png`,
+          `${BASE}/Arquitectos/Michelle Rojkind/work/Nestle.jpg`,
+        ]
+      },
+    ];
+
+    const nameList   = document.getElementById('left');
+    const portraitEl = document.getElementById('portrait-img');
+    const workImgs   = document.querySelectorAll('.work-img');
+
+    // Build name list
+    people.forEach((p, i) => {
+      const el = document.createElement('div');
+      el.className = 'person-name' + (i === 0 ? ' active' : '');
+      el.textContent = p.name;
+      el.addEventListener('mouseenter', () => showPerson(i));
+      nameList.appendChild(el);
+    });
+
+    function showPerson(idx) {
+      const p = people[idx];
+      document.querySelectorAll('.person-name').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+      // crossfade portrait
+      portraitEl.classList.add('fade');
+      setTimeout(() => {
+        portraitEl.src = p.portrait;
+        portraitEl.classList.remove('fade');
+      }, 150);
+      // update work images
+      workImgs.forEach((img, i) => {
+        img.classList.add('fade');
+        setTimeout(() => {
+          img.src = p.work[i] || '';
+          img.style.display = p.work[i] ? '' : 'none';
+          img.classList.remove('fade');
+        }, 150);
+      });
+    }
+
+    // Init with first person
+    showPerson(0);
+  </script>
 </body>
 </html>
