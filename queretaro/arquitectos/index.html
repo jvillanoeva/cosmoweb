@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Cosmo — Querétaro / Arquitectos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--color-bg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      cursor: default;
+      user-select: none;
+    }
+
+    /* ── Header ── */
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: var(--page-y) var(--page-x) 0;
+      z-index: var(--z-overlay);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    #site-title {
+      font-family: var(--font-display);
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      letter-spacing: 0.14em;
+      color: var(--color-text);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    #nav-container {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      position: relative;
+    }
+
+    #nav-trigger { color: var(--color-text-muted); cursor: default; }
+
+    #nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      padding-top: 0.8rem;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    #nav-container:hover #nav-menu {
+      opacity: 1; pointer-events: auto; transform: translateY(0);
+    }
+    #nav-menu a {
+      color: var(--color-text-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    #nav-menu a:hover { color: var(--color-text); }
+
+    /* ── Sub-nav ── */
+    #sub-nav {
+      position: fixed;
+      top: calc(var(--page-y) + 1.6rem);
+      left: var(--page-x);
+      display: flex;
+      align-items: center;
+      gap: 1.8rem;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      z-index: calc(var(--z-overlay) - 1);
+    }
+
+    #sub-nav a {
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    #sub-nav a:hover { color: var(--color-text); }
+    #sub-nav a.active { color: var(--color-text); }
+
+    #sub-nav .back {
+      color: var(--color-text-muted);
+      padding-right: 1rem;
+      border-right: 1px solid var(--color-surface);
+    }
+    #sub-nav .back:hover { color: var(--color-text); }
+
+    /* ── Layout ── */
+    #layout {
+      position: fixed;
+      top: var(--header-clearance);
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Left column ── */
+    #left {
+      width: 38%;
+      padding-left: var(--page-x);
+      padding-right: 4vw;
+      flex-shrink: 0;
+    }
+
+    #parent-label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    #section-name {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      letter-spacing: 0.04em;
+      color: var(--color-text);
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 1.6rem;
+    }
+
+    #section-body {
+      font-style: italic;
+      font-size: clamp(0.85rem, 1.3vw, 1.15rem);
+      color: var(--color-text);
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+      padding-left: 1.4rem;
+      border-left: 1px solid var(--color-surface);
+    }
+
+    /* ── Right column ── */
+    #right {
+      flex: 1;
+      height: 100%;
+      padding-right: var(--page-x);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    #visual {
+      width: 100%;
+      max-width: 54vw;
+      height: 68vh;
+      background: var(--color-surface);
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 2.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #visual-number {
+      position: absolute;
+      top: -0.1em;
+      right: -0.05em;
+      font-family: var(--font-display);
+      font-size: clamp(12rem, 20vw, 22rem);
+      letter-spacing: -0.04em;
+      color: var(--color-bg);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #visual-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">
+    <a id="site-title" href="/">Cosmo</a>
+    <div id="nav-container">
+      <div id="nav-menu">
+        <a href="/explore/">Explore</a>
+        <a href="/queretaro/">Querétaro</a>
+      </div>
+      <div id="nav-trigger">navegar _</div>
+    </div>
+  </div>
+
+  <nav id="sub-nav">
+    <a href="/queretaro/" class="back">← querétaro</a>
+    <a href="/queretaro/arquitectos/" class="active">arquitectos</a>
+    <a href="/queretaro/artistas/">artistas</a>
+    <a href="/queretaro/museos/">museos</a>
+    <a href="/queretaro/mutek/">mutek</a>
+  </nav>
+
+  <div id="layout">
+    <div id="left">
+      <div id="parent-label">Querétaro</div>
+      <div id="section-name">Arquitectos</div>
+      <div id="section-body">
+        Los que configuran el espacio<br>
+        donde todo ocurre.
+      </div>
+    </div>
+
+    <div id="right">
+      <div id="visual">
+        <div id="visual-number">01</div>
+        <div id="visual-label">Querétaro / Arquitectos</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
