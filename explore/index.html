@@ -379,8 +379,9 @@
         } else {
           card.className = 'card';
         }
+        const focalPos = proj.cover_position || 'center';
         card.innerHTML = `
-          <img src="${imgBase}/${encodeURIComponent(cover)}" alt="${proj.label}" loading="lazy" onerror="this.style.opacity='0'">
+          <img src="${imgBase}/${encodeURIComponent(cover)}" alt="${proj.label}" loading="lazy" onerror="this.style.opacity='0'" style="object-position:${focalPos}">
           <div class="card-label"><span>${proj.label}</span></div>
         `;
         card.addEventListener('click', () => {
