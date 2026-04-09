@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmo</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #0a0a0a; overflow: hidden; }
+    canvas { display: block; }
+
+    #prompt {
+      position: fixed;
+      bottom: 9vh;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      color: #2a2a2a;
+      text-transform: uppercase;
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: none;
+      transition: color 600ms ease;
+    }
+    #prompt.visible { color: #484848; }
+
+    .cursor {
+      display: inline-block;
+      width: 5px; height: 0.8em;
+      background: currentColor;
+      vertical-align: middle;
+      margin-left: 3px;
+      animation: blink 1.15s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    #hint {
+      position: fixed;
+      bottom: 9vh;
+      right: 6vw;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: #1e1e1e;
+      text-transform: uppercase;
+      user-select: none;
+      pointer-events: none;
+      transition: color 600ms ease;
+    }
+    #hint.visible { color: #2e2e2e; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="prompt">enter project code <span class="cursor"></span></div>
+  <div id="hint">click to rebuild _</div>
+
+  <script>
+  const canvas = document.getElementById('c');
+  const ctx    = canvas.getContext('2d');
+  const prompt = document.getElementById('prompt');
+  const hint   = document.getElementById('hint');
+
+  let W, H, offX, offY;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    computeOffset();
+    if (state === 'idle') snapAllToHome();
+  }
+
+  function computeOffset() {
+    offX = (W - TOTAL_W) / 2;
+    offY = (H - LH) / 2;
+  }
+
+  // ── Letter geometry ───────────────────────────────────────────────────────
+  // Each segment: [x1,y1, x2,y2] in local letter coords (origin = top-left of letter)
+  const LW = 48, LH = 72, GAP = 20;
+
+  const LETTERS = {
+    C: [
+      [10,  0,  LW,  0 ],  // top
+      [ 0, 10,   0, 33 ],  // left-top
+      [ 0, 39,   0, 62 ],  // left-bottom
+      [10, LH,  LW, LH ],  // bottom
+    ],
+    O: [
+      [ 5,  0,  43,  0 ],  // top
+      [ 0,  5,   0, 33 ],  // left-top
+      [ 0, 39,   0, 67 ],  // left-bottom
+      [LW,  5,  LW, 33 ],  // right-top
+      [LW, 39,  LW, 67 ],  // right-bottom
+      [ 5, LH,  43, LH ],  // bottom
+    ],
+    S: [
+      [ 5,  0,  LW,  0 ],  // top
+      [ 0,  5,   0, 33 ],  // left-top
+      [ 5, 36,  43, 36 ],  // middle
+      [LW, 39,  LW, 67 ],  // right-bottom
+      [ 0, LH,  43, LH ],  // bottom
+    ],
+    M: [
+      [ 0,   0,   0,  LH],  // left vertical
+      [ 0,   0,  24,  26],  // left-center diagonal
+      [24,  26,  LW,   0],  // right-center diagonal
+      [LW,   0,  LW,  LH],  // right vertical
+    ],
+  };
+
+  const WORD  = ['C','O','S','M','O'];
+  const TOTAL_W = WORD.length * LW + (WORD.length - 1) * GAP;
+
+  // ── Build segments ────────────────────────────────────────────────────────
+  const segs = [];
+
+  WORD.forEach((letter, li) => {
+    const xOff = li * (LW + GAP);
+    LETTERS[letter].forEach(([x1,y1,x2,y2]) => {
+      const lhx = (x1 + x2) / 2 + xOff;  // letter-space home center
+      const lhy = (y1 + y2) / 2;
+      const len   = Math.hypot(x2 - x1, y2 - y1);
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+
+      segs.push({
+        lhx, lhy,          // home center in letter-space (no canvas offset)
+        homeAngle: angle,
+        len,
+        cx: 0, cy: 0,      // current canvas position (set on first resize)
+        angle,
+        vx: 0, vy: 0, va: 0,
+        g: 0.88 + Math.random() * 0.26,  // per-stick gravity multiplier
+      });
+    });
+  });
+
+  function homeX(s) { return s.lhx + offX; }
+  function homeY(s) { return s.lhy + offY; }
+
+  function snapAllToHome() {
+    segs.forEach(s => {
+      s.cx    = homeX(s);
+      s.cy    = homeY(s);
+      s.angle = s.homeAngle;
+      s.vx = s.vy = s.va = 0;
+    });
+  }
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let state = 'idle'; // 'idle' | 'collapsing' | 'reforming'
+
+  function collapse() {
+    if (state !== 'idle') return;
+    state = 'collapsing';
+    // Sync positions to current home (in case of resize)
+    segs.forEach(s => {
+      s.cx    = homeX(s);
+      s.cy    = homeY(s);
+      s.angle = s.homeAngle;
+      // Each stick falls a little differently
+      s.vx = (Math.random() - 0.5) * 2.4;
+      s.vy =  Math.random() * 1.2 + 0.3;
+      s.va = (Math.random() - 0.5) * 0.06;
+    });
+    hint.classList.add('visible');
+  }
+
+  function reform() {
+    if (state === 'idle') return;
+    state = 'reforming';
+    // Dampen angular velocity for cleaner return
+    segs.forEach(s => { s.va *= 0.2; });
+    hint.classList.remove('visible');
+  }
+
+  // ── Physics ───────────────────────────────────────────────────────────────
+  const GRAV    = 0.32;
+  const K       = 0.072;   // spring constant
+  const DAMP    = 0.80;    // velocity damping
+  const THRESH  = 0.8;     // snap threshold (px)
+
+  function tick() {
+    if (state === 'collapsing') {
+      segs.forEach(s => {
+        s.vy += GRAV * s.g;
+        s.cx += s.vx;
+        s.cy += s.vy;
+        s.angle += s.va;
+      });
+    }
+
+    if (state === 'reforming') {
+      let settled = true;
+      segs.forEach(s => {
+        const tx = homeX(s), ty = homeY(s), ta = s.homeAngle;
+
+        s.vx = (s.vx + (tx - s.cx) * K) * DAMP;
+        s.vy = (s.vy + (ty - s.cy) * K) * DAMP;
+
+        // Shortest-path angle spring
+        let da = ta - s.angle;
+        while (da >  Math.PI) da -= Math.PI * 2;
+        while (da < -Math.PI) da += Math.PI * 2;
+        s.va = (s.va + da * K) * DAMP;
+
+        s.cx    += s.vx;
+        s.cy    += s.vy;
+        s.angle += s.va;
+
+        const d = Math.hypot(s.cx - tx, s.cy - ty);
+        if (d > THRESH || Math.abs(s.va) > 0.001) settled = false;
+      });
+
+      if (settled) {
+        state = 'idle';
+        snapAllToHome();
+        prompt.classList.add('visible');
+      }
+    }
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#fafaf8';
+    ctx.lineWidth   = 1.8;
+    ctx.lineCap     = 'round';
+
+    segs.forEach(s => {
+      const cx = (state === 'idle') ? homeX(s) : s.cx;
+      const cy = (state === 'idle') ? homeY(s) : s.cy;
+      const a  = (state === 'idle') ? s.homeAngle : s.angle;
+      const hl = s.len / 2;
+      const cos = Math.cos(a), sin = Math.sin(a);
+
+      ctx.beginPath();
+      ctx.moveTo(cx - hl * cos, cy - hl * sin);
+      ctx.lineTo(cx + hl * cos, cy + hl * sin);
+      ctx.stroke();
+    });
+  }
+
+  // ── Loop ──────────────────────────────────────────────────────────────────
+  function loop() {
+    tick();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  resize();
+  snapAllToHome();
+  window.addEventListener('resize', resize);
+
+  // Show logo formed for a beat, then it's ready
+  setTimeout(() => { prompt.classList.add('visible'); }, 800);
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  window.addEventListener('mousemove', collapse);
+
+  window.addEventListener('click', reform);
+
+  loop();
+  </script>
+</body>
+</html>
